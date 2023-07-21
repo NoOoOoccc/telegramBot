@@ -3,6 +3,7 @@ import logging
 
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackContext, Filters, MessageHandler
+from telegram.ext import run_async
 
 # 定义/start命令的处理函数
 import cloudMusic
@@ -19,21 +20,26 @@ def test(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('测试成功')
 
 
+@run_async
 def word_of_song(update: Update, context: CallbackContext) -> None:
     # 如果消息包含音频 根据消息标题获取歌名  到网易云进行搜索爬取歌词
-    if update.message.audio is not None:
-        # 获取歌名
-        songName = update.message.audio.title.title()
-        # 获取歌手
-        singer = update.message.audio.performer
-        # 执行获取歌词脚本
-        lyc = cloudMusic.getMusicId(songName+' '+singer)
-        print(lyc)
-        update.message.reply_text(lyc)
+    try:
+        if update.message.audio is not None:
+            # 获取歌名
+            songName = update.message.audio.title.title()
+            # 获取歌手
+            singer = update.message.audio.performer
+            # 执行获取歌词脚本
+            lyc = cloudMusic.getMusicId(songName + ' ' + singer)
+            print(lyc)
+            update.message.reply_text(lyc, timeout=600)
+    except Exception as e:
+        logging.error(e)
+        update.message.reply_text('出现错误: {}'.format(e))
 
 
 # 创建Updater实例，需要提供有效的Telegram bot API token
-updater = Updater('6062648071:AAFlgKl1aHftCPy3nkwQ4cIuEZSm0ufHJAM')
+updater = Updater('6062648071:AAFlgKl1aHftCPy3nkwQ4cIuEZSm0ufHJAM', use_context=True, workers=8)
 
 # 将/start和/test命令的处理函数添加到dispatcher
 updater.dispatcher.add_handler(CommandHandler('start', start))
