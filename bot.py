@@ -5,8 +5,13 @@ from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackContext, Filters, MessageHandler
 from telegram.ext import run_async
 
-# 定义/start命令的处理函数
+# 导入网易云音乐爬取脚本
 import cloudMusic
+
+# 消息回复超时时间
+MessageTimeOut = 600
+# 异步线程数量
+threadWorkers = 8
 
 
 def start(update: Update, context: CallbackContext) -> None:
@@ -23,8 +28,8 @@ def test(update: Update, context: CallbackContext) -> None:
 @run_async
 def word_of_song(update: Update, context: CallbackContext) -> None:
     # 如果消息包含音频 根据消息标题获取歌名  到网易云进行搜索爬取歌词
-    try:
-        if update.message.audio is not None:
+    if update.message.audio is not None:
+        try:
             # 获取歌名
             songName = update.message.audio.title.title()
             # 获取歌手
@@ -32,10 +37,10 @@ def word_of_song(update: Update, context: CallbackContext) -> None:
             # 执行获取歌词脚本
             lyc = cloudMusic.getMusicId(songName + ' ' + singer)
             print(lyc)
-            update.message.reply_text(lyc, timeout=600)
-    except Exception as e:
-        logging.error(e)
-        update.message.reply_text('出现错误: {}'.format(e))
+            update.message.reply_text(lyc, timeout=MessageTimeOut)
+        except Exception as e:
+            logging.error(e)
+            update.message.reply_text('出现错误: {}'.format(e))
 
 
 # 创建Updater实例，需要提供有效的Telegram bot API token
