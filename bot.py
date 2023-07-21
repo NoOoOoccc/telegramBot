@@ -22,7 +22,12 @@ def test(update: Update, context: CallbackContext) -> None:
 def word_of_song(update: Update, context: CallbackContext) -> None:
     # 如果消息包含音频 根据消息标题获取歌名  到网易云进行搜索爬取歌词
     if update.message.audio is not None:
-        lyc = cloudMusic.getMusicId(update.message.audio.title.title())
+        # 获取歌名
+        songName = update.message.audio.title.title()
+        # 获取歌手
+        singer = update.message.audio.performer
+        # 执行获取歌词脚本
+        lyc = cloudMusic.getMusicId(songName+' '+singer)
         print(lyc)
         update.message.reply_text(lyc)
 
