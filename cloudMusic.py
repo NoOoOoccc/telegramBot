@@ -1,3 +1,4 @@
+from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC  # 修改这里
 
@@ -7,7 +8,11 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 
 # 根据搜索结果 获取歌曲id
-def getMusicId(searchName, songName, singer):
+def getMusicId(searchName, singer):
+    if len(searchName) > 20:
+        searchName = searchName[0:20]
+    print(searchName)
+    print(singer)
     option = webdriver.ChromeOptions()
     # 伪造请求头
     option.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/{}"
@@ -21,11 +26,16 @@ def getMusicId(searchName, songName, singer):
     driver = webdriver.Chrome(chrome_options=option)
     print('开始获取音乐id')
     try:
-        url = 'https://music.163.com/#/search/m/?s=' + searchName
+        url = 'https://music.163.com/#/search/m/?s=' + searchName+'&type=1'
         driver.get(url)
-        wait = WebDriverWait(driver, 1)
+        wait = WebDriverWait(driver, 10)
         # 切换到name =  contentFrame  的iframe中
-        wait.until(EC.frame_to_be_available_and_switch_to_it((By.NAME, "contentFrame")))
+        try:
+            wait.until(EC.frame_to_be_available_and_switch_to_it((By.NAME, "contentFrame")))
+        except TimeoutException:
+            print("等待 iframe 超时，尝试重新加载页面")
+            driver.refresh()
+            wait.until(EC.frame_to_be_available_and_switch_to_it((By.NAME, "contentFrame")))
         soup = BeautifulSoup(driver.page_source, "html.parser")
         # 获取第一个class为ply的a标签中的id
         # row = soup.find_all("a", {"class": "ply"})[0].get('id')
@@ -39,18 +49,26 @@ def getMusicId(searchName, songName, singer):
                 break
             text_div = div.find('div', {'class': 'text'})
             a_tags = text_div.find('a')
-            for a in a_tags:
-                if a.text == singer:
+            if a_tags is not None:
+                for a in a_tags:
+                    if a.text == singer:
+                        # 修改标识以退出循环
+                        found = True
+                        break
+                    else:
+                        index = index + 1
+            else:
+                if text_div.text == singer:
                     # 修改标识以退出循环
                     found = True
                     break
                 else:
                     index = index + 1
+        print(index)
         # 获取索引标记的id
         row = soup.find_all("a", {"class": "ply"})[index].get('id')
-        print(row)
         id = row.split('song_')[1]
-        print(id)
+        print("歌曲id为： "+id)
         lyc = getMusicLyc(id, driver)
         return lyc
     except Exception as e:
@@ -65,7 +83,7 @@ def getMusicLyc(musicId, driver):
     lyc_url = "https://music.163.com/#/song?id=" + musicId  # 根据歌曲的 ID 号拼接出下载的链接。歌曲直链获取的方法参考文前的注释部分。
     try:
         driver.get(lyc_url)
-        wait = WebDriverWait(driver, 1)
+        wait = WebDriverWait(driver, 10)
         # 切换到name =  contentFrame  的iframe中
         wait.until(EC.frame_to_be_available_and_switch_to_it((By.NAME, "contentFrame")))
         # 获取网页元素
@@ -88,4 +106,4 @@ def getMusicLyc(musicId, driver):
 
 # 测试使用
 if __name__ == '__main__':
-    MusicId = getMusicId('夜曲 周杰伦', '夜曲', '周杰伦')
+    MusicId = getMusicId('君に聴かせたかった歌 (Original12312321312312', 'H△G')
