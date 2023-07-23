@@ -35,7 +35,7 @@ def word_of_song(update: Update, context: CallbackContext) -> None:
             # 获取歌手
             singer = update.message.audio.performer
             # 执行获取歌词脚本
-            lyc = cloudMusic.getMusicId(songName + ' ' + singer)
+            lyc = cloudMusic.getMusicId(songName + ' ' + singer, songName, singer)
             print(lyc)
             update.message.reply_text(lyc, timeout=MessageTimeOut)
         except Exception as e:
