@@ -1,6 +1,3 @@
-import random
-import time
-
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC  # 修改这里
 
@@ -12,13 +9,16 @@ from selenium.webdriver.support.wait import WebDriverWait
 # 根据搜索结果 获取歌曲id
 def getMusicId(searchName):
     option = webdriver.ChromeOptions()
+    #伪造请求头
     option.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/{}"
                         " (XHTML, like Gecko) Chrome/115.0.5790.98 Safari/{}")
-    option.add_argument('headless')  # 设置option
+    #隐藏浏览器窗口
+    option.add_argument('headless')
     # 去除图片及css样式
     prefs = {"profile.managed_default_content_settings.images": 2, 'permissions.default.stylesheet': 2}
     option.add_experimental_option("prefs", prefs)
-    driver = webdriver.Chrome(chrome_options=option)  # 调用带参数的谷歌浏览器
+    # 调用带参数的谷歌浏览器
+    driver = webdriver.Chrome(chrome_options=option)
     print('开始获取音乐id')
     try:
         url = 'https://music.163.com/#/search/m/?s=' + searchName
@@ -47,7 +47,9 @@ def getMusicLyc(musicId, driver):
         wait = WebDriverWait(driver, 10)
         # 切换到name =  contentFrame  的iframe中
         wait.until(EC.frame_to_be_available_and_switch_to_it((By.NAME, "contentFrame")))
+        # 获取网页元素
         soup = BeautifulSoup(driver.page_source, "html.parser")
+        # 替换 换行符
         for linebreak in soup.find_all('br'):
             linebreak.replace_with('\n\n')
         # 获取第一个id为lyric-content的div中的文本内容

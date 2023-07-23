@@ -44,7 +44,7 @@ def word_of_song(update: Update, context: CallbackContext) -> None:
 
 
 # 创建Updater实例，需要提供有效的Telegram bot API token
-updater = Updater('6062648071:AAFlgKl1aHftCPy3nkwQ4cIuEZSm0ufHJAM', use_context=True, workers=8)
+updater = Updater('6062648071:AAFlgKl1aHftCPy3nkwQ4cIuEZSm0ufHJAM', use_context=True, workers=threadWorkers)
 
 # 将/start和/test命令的处理函数添加到dispatcher
 updater.dispatcher.add_handler(CommandHandler('start', start))
