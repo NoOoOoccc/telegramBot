@@ -22,13 +22,19 @@ def getMusicId(searchName, singer):
     # 去除图片及css样式
     prefs = {"profile.managed_default_content_settings.images": 2, 'permissions.default.stylesheet': 2}
     option.add_experimental_option("prefs", prefs)
+    option.add_experimental_option('excludeSwitches', ['enable-automation'])
+    option.add_experimental_option('useAutomationExtension', False)
     # 调用带参数的谷歌浏览器
-    driver = webdriver.Chrome(chrome_options=option)
+    driver = webdriver.Chrome(options=option)
+    driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument',
+                           {'source': 'Object.defineProperty(navigator,"webdriver",{get:()=>undefined})'})
+
     print('开始获取音乐id')
     try:
-        url = 'https://music.163.com/#/search/m/?s=' + searchName+'&type=1'
+        url = 'https://music.163.com/#/search/m/?s=' + searchName + '&type=1'
         driver.get(url)
-        wait = WebDriverWait(driver, 10)
+        print(url)
+        wait = WebDriverWait(driver, 1)
         # 切换到name =  contentFrame  的iframe中
         try:
             wait.until(EC.frame_to_be_available_and_switch_to_it((By.NAME, "contentFrame")))
@@ -37,8 +43,6 @@ def getMusicId(searchName, singer):
             driver.refresh()
             wait.until(EC.frame_to_be_available_and_switch_to_it((By.NAME, "contentFrame")))
         soup = BeautifulSoup(driver.page_source, "html.parser")
-        # 获取第一个class为ply的a标签中的id
-        # row = soup.find_all("a", {"class": "ply"})[0].get('id')
         div_tags = soup.find_all('div', {'class': 'td w1'})
         # 比对歌手正确标识
         found = False
@@ -65,10 +69,12 @@ def getMusicId(searchName, singer):
                 else:
                     index = index + 1
         print(index)
+        if index >= 20:
+            return "沙比网易云  只让我加载前20首 懒加载规则搞不懂 我是彩笔  我搞不定了"
         # 获取索引标记的id
         row = soup.find_all("a", {"class": "ply"})[index].get('id')
         id = row.split('song_')[1]
-        print("歌曲id为： "+id)
+        print("歌曲id为： " + id)
         lyc = getMusicLyc(id, driver)
         return lyc
     except Exception as e:
@@ -106,4 +112,5 @@ def getMusicLyc(musicId, driver):
 
 # 测试使用
 if __name__ == '__main__':
-    MusicId = getMusicId('君に聴かせたかった歌 (Original12312321312312', 'H△G')
+    MusicId = getMusicId('S.H.E一眼万年', 'S.H.E')
+
