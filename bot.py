@@ -3,7 +3,6 @@ import logging
 
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackContext, Filters, MessageHandler
-from telegram.ext import run_async
 
 # 导入网易云音乐爬取脚本
 import cloudMusic
@@ -25,7 +24,6 @@ def test(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('测试成功')
 
 
-@run_async
 def word_of_song(update: Update, context: CallbackContext) -> None:
     # 如果消息包含音频 根据消息标题获取歌名  到网易云进行搜索爬取歌词
     if update.message.audio is not None:
@@ -49,7 +47,8 @@ updater = Updater('6062648071:AAFlgKl1aHftCPy3nkwQ4cIuEZSm0ufHJAM', use_context=
 # 将/start和/test命令的处理函数添加到dispatcher
 updater.dispatcher.add_handler(CommandHandler('start', start))
 updater.dispatcher.add_handler(CommandHandler('test', test))
-updater.dispatcher.add_handler(MessageHandler(Filters.chat_type.groups, word_of_song))
+updater.dispatcher.add_handler(MessageHandler(Filters.chat_type.groups, word_of_song, run_async=True))
+
 
 # 开始监听新的更新
 updater.start_polling()
