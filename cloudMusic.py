@@ -70,7 +70,7 @@ def getMusicId(searchName, singer):
                     index = index + 1
         print(index)
         if index >= 20:
-            return "沙比网易云  只让我加载前20首 懒加载规则搞不懂 我是彩笔  我搞不定了"
+            return "网易云  只让我加载前20首 懒加载规则搞不懂 我是彩笔  我搞不定了"
         # 获取索引标记的id
         row = soup.find_all("a", {"class": "ply"})[index].get('id')
         id = row.split('song_')[1]
