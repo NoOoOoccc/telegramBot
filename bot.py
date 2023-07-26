@@ -1,16 +1,37 @@
 # 导入需要的库
 import logging
-
-from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext, Filters, MessageHandler
-
+import threading
 # 导入网易云音乐爬取脚本
 import cloudMusic
+# 导入图片处理
+import pictureHandle
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, CallbackContext, Filters, MessageHandler
+from telegram.ext import ConversationHandler
 
 # 消息回复超时时间
 MessageTimeOut = 600
 # 异步线程数量
 threadWorkers = 8
+
+
+def photo(update: Update, context: CallbackContext):
+    print("接收到贴纸,进入了photo")
+    if update.message.sticker:
+        print("开始转换贴纸")
+        # 获取贴纸
+        sticker = update.message.sticker
+        print(sticker)
+        # 获取文件ID
+        file_id = sticker.file_id
+        # 使用bot的get_file方法获取文件
+        photo_file = context.bot.get_file(file_id)
+        # 获取文件的字节流
+        photo_bytes = photo_file.download_as_bytearray()
+        # 转换为jpeg格式
+        byte_arr = pictureHandle.pictureToJPEG(photo_bytes)
+        # 回复图片
+        context.bot.send_photo(update.message.chat_id, byte_arr)
 
 
 def start(update: Update, context: CallbackContext) -> None:
@@ -45,11 +66,10 @@ def word_of_song(update: Update, context: CallbackContext) -> None:
 updater = Updater('6062648071:AAFlgKl1aHftCPy3nkwQ4cIuEZSm0ufHJAM', use_context=True, workers=threadWorkers)
 
 # 将/start和/test命令的处理函数添加到dispatcher
+updater.dispatcher.add_handler(MessageHandler(Filters.sticker, photo,run_async=True))
 updater.dispatcher.add_handler(CommandHandler('start', start))
 updater.dispatcher.add_handler(CommandHandler('test', test))
 updater.dispatcher.add_handler(MessageHandler(Filters.chat_type.groups, word_of_song, run_async=True))
-
-
 # 开始监听新的更新
 updater.start_polling()
 
