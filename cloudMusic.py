@@ -44,6 +44,12 @@ def getMusicId(searchName, singer):
             wait.until(EC.frame_to_be_available_and_switch_to_it((By.NAME, "contentFrame")))
         soup = BeautifulSoup(driver.page_source, "html.parser")
         div_tags = soup.find_all('div', {'class': 'td w1'})
+        # 是否为多歌手标识
+        singers = singer.split('&')
+        print(singers)
+        isMoreSinger = False
+        if len(singers) > 1:
+            isMoreSinger = True
         # 比对歌手正确标识
         found = False
         # 索引标记
@@ -52,15 +58,26 @@ def getMusicId(searchName, singer):
             if found:
                 break
             text_div = div.find('div', {'class': 'text'})
-            a_tags = text_div.find('a')
+            a_tags = text_div.find_all('a')
+            print(a_tags)
             if a_tags is not None:
+                i = 0
                 for a in a_tags:
-                    if a.text == singer:
-                        # 修改标识以退出循环
-                        found = True
-                        break
-                    else:
-                        index = index + 1
+                    if isMoreSinger:
+                        if a.text == singers[i]:
+                            if i == len(singers)-1:
+                                print("比对所有歌手完成")
+                                # 修改标识以退出循环
+                                found = True
+                                break
+                    i = i + 1
+                    if not isMoreSinger:
+                        if a.text == singer:
+                            # 修改标识以退出循环
+                            found = True
+                            break
+                        else:
+                            index = index + 1
             else:
                 if text_div.text == singer:
                     # 修改标识以退出循环
@@ -112,5 +129,4 @@ def getMusicLyc(musicId, driver):
 
 # 测试使用
 if __name__ == '__main__':
-    MusicId = getMusicId('S.H.E一眼万年', 'S.H.E')
-
+    MusicId = getMusicId('张韶涵&王赫野 篇章', '张韶涵&王赫野')
