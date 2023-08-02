@@ -45,7 +45,9 @@ def getMusicId(searchName, singer):
         soup = BeautifulSoup(driver.page_source, "html.parser")
         div_tags = soup.find_all('div', {'class': 'td w1'})
         # 是否为多歌手标识
-        singers = singer.split('&')
+        singers = singer.split('/')
+        if len(singers) == 1:
+            singers = singer.split('&')
         print(singers)
         isMoreSinger = False
         if len(singers) > 1:
@@ -54,23 +56,21 @@ def getMusicId(searchName, singer):
         found = False
         # 索引标记
         index = 0
+        # 正确数量
+        num = 0
         for div in div_tags:
             if found:
                 break
             text_div = div.find('div', {'class': 'text'})
+            print(text_div)
             a_tags = text_div.find_all('a')
             print(a_tags)
             if a_tags is not None:
                 i = 0
                 for a in a_tags:
                     if isMoreSinger:
-                        if a.text == singers[i]:
-                            if i == len(singers)-1:
-                                print("比对所有歌手完成")
-                                # 修改标识以退出循环
-                                found = True
-                                break
-                    i = i + 1
+                        if a.text in singers:
+                            num = num + 1
                     if not isMoreSinger:
                         if a.text == singer:
                             # 修改标识以退出循环
@@ -78,6 +78,7 @@ def getMusicId(searchName, singer):
                             break
                         else:
                             index = index + 1
+                    i = i + 1
             else:
                 if text_div.text == singer:
                     # 修改标识以退出循环
@@ -85,6 +86,19 @@ def getMusicId(searchName, singer):
                     break
                 else:
                     index = index + 1
+            if text_div.text is not None:
+                singerText  = text_div.text.split('/')
+                if len(singerText) == 1:
+                    singerText = text_div.text.split('&')
+                else:
+                    for s in singerText:
+                        if s in singers:
+                            num = num + 1
+            if num >= 2:
+                print("比对歌手完成,正确比对歌手超过2视为比对正确")
+                # 修改标识以退出循环
+                found = True
+                break
         print(index)
         if index >= 20:
             return "网易云  只让我加载前20首 懒加载规则搞不懂 我是彩笔  我搞不定了"
@@ -129,4 +143,4 @@ def getMusicLyc(musicId, driver):
 
 # 测试使用
 if __name__ == '__main__':
-    MusicId = getMusicId('张韶涵&王赫野 篇章', '张韶涵&王赫野')
+    MusicId = getMusicId('Heiwa Sanka', 'Autodidactic Studios/Lappy/Diana Garnet')
